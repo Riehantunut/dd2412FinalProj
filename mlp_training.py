@@ -89,4 +89,4 @@ if __name__ == '__main__':
   # Process is complete.
   print('Training process has finished.')
 
-  torch.save(mlp, "mlp3_model_second")
+  torch.save(mlp, "mlp_model.pth")
