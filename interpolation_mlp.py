@@ -91,21 +91,46 @@ def activation_matching_interpolation(model_A, model_B, num_steps, dataset_batch
     pass
 
 
+
+
+# Registers activations and returns for all layers in model as a dictionary of Z matrices
+def get_Z_for_each_layer(model, dataset):
+    
+    trainloader = torch.utils.data.DataLoader(dataset, batch_size=10, shuffle=True, num_workers=1) # Use 10 datapoints
+
+    # Get data of batch size = 10
+    for data in trainloader: 
+        inputs, _ = data
+        break
+    
+    activation = {}
+    # This function adds output from a layer to the activation dictionary
+    def get_activation(name):
+        def hook(model, input, output): # This function must have this structure, due to PyTorch "register_forward_hook" function
+            activation[name] = torch.t(output.detach())  # torch.t = transpose, to get correct format
+        return hook
+    
+    # Loop to go through linear layers, and register Z for each layer
+    for layer_num in range(1,10, 2):
+        model.layers[layer_num].register_forward_hook(get_activation(str(layer_num))) # "1" signifies the first layer
+        output = model(inputs)
+        # print(activation[str(layer_num)])
+        # print(activation[str(layer_num)].shape)
+    
+    return activation
+    
+    
+
+
 if __name__ == "__main__":
     model_A = torch.load("mlp_model.pth")
     model_B = torch.load("mlp_model_second.pth")
 
-    # activation = {}
-    # def get_activation(name):
-    #     def hook(model, input, output):
-    #         activation[name] = output.detach()
-    #     return hook
+    dataset = CIFAR10(os.getcwd(), download=True, transform=transforms.ToTensor())
+    
+    Z_dict = get_Z_for_each_layer(model_A, dataset)
 
-    # model = MLP()
-    # model.fc2.register_forward_hook(get_activation('fc2'))
-    # x = torch.randn(1, 25)
-    # output = model(x)
-    # print(activation['fc2'])
+    
 
     ## CREATE NAIVE PLOT
     #naively_interpolated_model_list = naive_interpolation(model_A, model_B, 7)
