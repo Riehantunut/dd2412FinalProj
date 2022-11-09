@@ -62,34 +62,15 @@ def naive_interpolation(model_A, model_B, num_steps):
 
     return list_of_interpolated_models
 
-
-if __name__ == "__main__":
-    model_A = torch.load("mlp_model.pth")
-    model_B = torch.load("mlp_model_second.pth")
-
-    # print(model_A.layers[1].weight)
-    # print(model_B.layers[1].weight)
-
-    # print(naive_interpolation(model_A, model_B, 10))
-    naively_interpolated_model_list = naive_interpolation(model_A, model_B, 7)
-
-    # print(naively_interpolated_model_list[0].layers[1].weight)
-    # print(naively_interpolated_model_list[5].layers[1].weight)
-    # print(naively_interpolated_model_list[10].layers[1].weight)
-
-    # Evaluate models in list
-
-    
+def create_naive_plot(naive_list):
     torch.manual_seed(42)
     # Prepare CIFAR-10 dataset
     dataset = CIFAR10(os.getcwd(), download=True, transform=transforms.ToTensor())
     trainloader = torch.utils.data.DataLoader(dataset, batch_size=9000, shuffle=False, num_workers=1) # Take whole dataset in one batch
 
     loss_function = nn.CrossEntropyLoss()
-
     loss_list = []
-    for naive_model in naively_interpolated_model_list:
-        
+    for naive_model in naive_list:
         for data in trainloader: # This loop should only go once, I know this is non-ideal
             inputs, targets = data
             outputs = naive_model(inputs)
@@ -104,6 +85,45 @@ if __name__ == "__main__":
     plt.plot(loss_list)
     plt.show()
     print(loss_list)
+
+
+def activation_matching_interpolation(model_A, model_B, num_steps, dataset_batch):
+    pass
+
+
+if __name__ == "__main__":
+    model_A = torch.load("mlp_model.pth")
+    model_B = torch.load("mlp_model_second.pth")
+
+    # activation = {}
+    # def get_activation(name):
+    #     def hook(model, input, output):
+    #         activation[name] = output.detach()
+    #     return hook
+
+    # model = MLP()
+    # model.fc2.register_forward_hook(get_activation('fc2'))
+    # x = torch.randn(1, 25)
+    # output = model(x)
+    # print(activation['fc2'])
+
+    ## CREATE NAIVE PLOT
+    #naively_interpolated_model_list = naive_interpolation(model_A, model_B, 7)
+    #create_naive_plot(naively_interpolated_model_list)
+
+
+    # print(model_A.layers[1].weight)
+    # print(model_B.layers[1].weight)
+
+    # print(naive_interpolation(model_A, model_B, 10))
+    
+
+    # print(naively_interpolated_model_list[0].layers[1].weight)
+    # print(naively_interpolated_model_list[5].layers[1].weight)
+    # print(naively_interpolated_model_list[10].layers[1].weight)
+
+    # Evaluate models in list
+    
 
 
     
