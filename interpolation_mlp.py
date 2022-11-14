@@ -4,7 +4,9 @@ from torch import nn
 from torchvision.datasets import CIFAR10
 from torchvision import transforms
 import matplotlib.pyplot as plt
-
+from scipy import optimize
+import scipy
+import numpy as np
 
 # Define MLP3 model
 class MLP(nn.Module):
@@ -87,18 +89,12 @@ def create_naive_plot(naive_list):
     print(loss_list)
 
 
-def activation_matching_interpolation(model_A, model_B, num_steps, dataset_batch):
-    pass
-
-
-
-
 # Registers activations and returns for all layers in model as a dictionary of Z matrices
 def get_Z_for_each_layer(model, dataset):
     
     trainloader = torch.utils.data.DataLoader(dataset, batch_size=10, shuffle=True, num_workers=1) # Use 10 datapoints
 
-    # Get data of batch size = 10
+    # Get data of batch size
     for data in trainloader: 
         inputs, _ = data
         break
@@ -118,6 +114,34 @@ def get_Z_for_each_layer(model, dataset):
         # print(activation[str(layer_num)].shape)
     
     return activation
+
+
+# Function for running activation matching. Returns new model pi(theta), that is, a new modified model_B which should
+# be in the same basin as A.
+def activation_matching_interpolation(model_A, model_B, num_steps, dataset):
+
+    Z_dict_model_A = get_Z_for_each_layer(model_A, dataset)
+    Z_dict_model_B = get_Z_for_each_layer(model_B, dataset)
+
+    P_l_for_all_layers = {}
+
+    # P_l has dimensions d*d, "d" is the dimension of the layer
+    # Calculate all P_l values
+    for layer_num in range(1,10, 2):
+        # Use Hungarian method to get P_l
+        P_l = np.matmul(Z_dict_model_A[str(layer_num)], torch.t(Z_dict_model_B[str(layer_num)]))
+        row_ind, col_ind = scipy.optimize.linear_sum_assignment(P_l, maximize = True) # col_ind is the actual values
+
+        P_l_for_all_layers[str(layer_num)] = col_ind
+    # print(row_ind)
+    # print(col_ind)
+    # print(type(col_ind))
+    # print(col_ind.shape)
+    # print("Z shape: ", Z_dict_model_A["1"].shape)
+
+    # Create new model is the same basin as model_A
+    
+
     
     
 
@@ -128,7 +152,9 @@ if __name__ == "__main__":
 
     dataset = CIFAR10(os.getcwd(), download=True, transform=transforms.ToTensor())
     
-    Z_dict = get_Z_for_each_layer(model_A, dataset)
+    # Z_dict = get_Z_for_each_layer(model_A, dataset)
+
+    activation_matching_interpolation(model_A, model_B, 10, dataset)
 
     
 
