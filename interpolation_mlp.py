@@ -140,8 +140,42 @@ def activation_matching_interpolation(model_A, model_B, num_steps, dataset):
     # print("Z shape: ", Z_dict_model_A["1"].shape)
 
     # Create new model is the same basin as model_A
-    
+    pass
 
+
+# Based on the algorithm described in the paper
+def permutation_coordinate_descent(model_weights_A, model_weights_B):
+    # Initialize pi_dict
+    pi = {}
+    for layer_num, weights in model_weights_A.items():
+        pi[layer_num] = torch.eye(len(weights)) # The dimensions of P_l is decided by the first dim of the weights (num "features")
+    
+    layer_list = [x for x in range(1,10, 2)]
+    converged = False
+    while not converged:
+        for layer in np.random.permutation(layer_list):
+            print(layer)
+        
+
+
+def matching_weights_interpolation(model_A, model_B, num_steps):
+    weights_model_A = {}
+    weights_model_B = {}
+
+    biases_model_A = {}
+    biases_model_B = {}
+
+    # Loop to go through linear layers
+    for layer_num in range(1,10, 2):
+        weights_model_A[layer_num] = model_A.layers[layer_num].weight
+        weights_model_B[layer_num] = model_B.layers[layer_num].weight
+
+        biases_model_A[layer_num] = model_A.layers[layer_num].bias
+        biases_model_B[layer_num] = model_B.layers[layer_num].bias
+
+    permutation_coordinate_descent(weights_model_A, weights_model_B)
+
+    
     
     
 
@@ -152,9 +186,12 @@ if __name__ == "__main__":
 
     dataset = CIFAR10(os.getcwd(), download=True, transform=transforms.ToTensor())
     
-    # Z_dict = get_Z_for_each_layer(model_A, dataset)
+    ## CREATE WEIGHT MATCHING
+    matching_weights_interpolation(model_A, model_B, 10)
+    
 
-    activation_matching_interpolation(model_A, model_B, 10, dataset)
+    ## CREATE ACTIVATION MATCHING
+    # activation_matching_interpolation(model_A, model_B, 10, dataset)
 
     
 
