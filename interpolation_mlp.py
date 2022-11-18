@@ -129,12 +129,24 @@ def activation_matching_interpolation(model_A, model_B, num_steps, dataset):
     # Calculate all P_l values
     for layer_num in range(1,10, 2):
         # Use Hungarian method to get P_l
-        P_l = np.matmul(Z_dict_model_A[str(layer_num)], torch.t(Z_dict_model_B[str(layer_num)]))
-        row_ind, col_ind = scipy.optimize.linear_sum_assignment(P_l, maximize = True) # col_ind is the actual values
+        Z_l = np.matmul(Z_dict_model_A[str(layer_num)], torch.t(Z_dict_model_B[str(layer_num)]))
+        row_ind, col_ind = scipy.optimize.linear_sum_assignment(torch.t(Z_l), maximize = True) # linear_sum_assignment calculates an X matrix with either 0 or 1
 
-        P_l_for_all_layers[str(layer_num)] = col_ind
-    # print(row_ind)
-    # print(col_ind)
+        P_l = np.zeros([len(row_ind), len(row_ind)]) # d*d matrix
+        for row in row_ind:
+            P_l[row, col_ind[row]] = 1
+        P_l = P_l.T # transpose P_l back
+        P_l_for_all_layers[layer_num] = P_l
+
+
+    # Now we calculate W' and b' by modifying model_B
+    model_B_weight = model_B.layers[layer_num].weight
+    model_B_bias = model_B.layers[layer_num].bias
+
+    for layer_num in range(1,10, 2):
+        if layer_num == 1: # at layer=1 we will not multiply by P_{l-1}^T
+
+    
     # print(type(col_ind))
     # print(col_ind.shape)
     # print("Z shape: ", Z_dict_model_A["1"].shape)
@@ -176,8 +188,6 @@ def matching_weights_interpolation(model_A, model_B, num_steps):
     permutation_coordinate_descent(weights_model_A, weights_model_B)
 
     
-    
-    
 
 
 if __name__ == "__main__":
@@ -187,11 +197,11 @@ if __name__ == "__main__":
     dataset = CIFAR10(os.getcwd(), download=True, transform=transforms.ToTensor())
     
     ## CREATE WEIGHT MATCHING
-    matching_weights_interpolation(model_A, model_B, 10)
+    # matching_weights_interpolation(model_A, model_B, 10)
     
 
     ## CREATE ACTIVATION MATCHING
-    # activation_matching_interpolation(model_A, model_B, 10, dataset)
+    activation_matching_interpolation(model_A, model_B, 10, dataset)
 
     
 
