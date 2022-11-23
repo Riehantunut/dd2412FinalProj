@@ -136,23 +136,41 @@ def activation_matching_interpolation(model_A, model_B, num_steps, dataset):
         for row in row_ind:
             P_l[row, col_ind[row]] = 1
         P_l = P_l.T # transpose P_l back
-        P_l_for_all_layers[layer_num] = P_l
+        P_l_for_all_layers[layer_num] = torch.from_numpy(P_l) # convert np matrix to torch matrix
 
+
+    interpolated_model = MLP() # instantiate empty model
 
     # Now we calculate W' and b' by modifying model_B
-    model_B_weight = model_B.layers[layer_num].weight
-    model_B_bias = model_B.layers[layer_num].bias
-
     for layer_num in range(1,10, 2):
-        if layer_num == 1: # at layer=1 we will not multiply by P_{l-1}^T
+        model_B_weight = model_B.layers[layer_num].weight
+        model_B_bias = model_B.layers[layer_num].bias
 
-    
-    # print(type(col_ind))
-    # print(col_ind.shape)
-    # print("Z shape: ", Z_dict_model_A["1"].shape)
+        # print("P_l_for_all_layers[layer_num]: ", P_l_for_all_layers[layer_num])
+        # print("P_l_for_all_layers[layer_num].double(): ",  P_l_for_all_layers[layer_num].double())
+
+        # print("model_B_weight: ", model_B_weight[0])
+        # print("type(model_B_weight): ", type(model_B_weight[0]))
+
+        model_B_weight = model_B_weight.detach().numpy()
+        model_B_bias = model_B_bias.detach().numpy()
+
+        if layer_num == 1: # at layer=1 we will not multiply by P_{l-1}^T
+            interpolated_layer_weight = np.matmul(P_l_for_all_layers[layer_num], model_B_weight)
+            interpolated_layer_bias = np.matmul(P_l_for_all_layers[layer_num], model_B_bias)
+        else:
+            interpolated_layer_weight = np.matmul(
+                                            np.matmul(P_l_for_all_layers[layer_num], model_B_weight),
+                                            np.transpose(P_l_for_all_layers[layer_num-2]))
+            interpolated_layer_bias = np.matmul(P_l_for_all_layers[layer_num], model_B_bias)
+
+
+        interpolated_model.layers[layer_num].weight = torch.nn.Parameter(interpolated_layer_weight)
+        interpolated_model.layers[layer_num].bias = torch.nn.Parameter(interpolated_layer_bias)
+
 
     # Create new model is the same basin as model_A
-    pass
+    return interpolated_model.double()
 
 
 # Based on the algorithm described in the paper
@@ -195,19 +213,23 @@ if __name__ == "__main__":
     model_B = torch.load("mlp_model_second.pth")
 
     dataset = CIFAR10(os.getcwd(), download=True, transform=transforms.ToTensor())
+
+    ## CREATE NAIVE PLOT
+    # naively_interpolated_model_list = naive_interpolation(model_A, model_B, 7)
+    # create_naive_plot(naively_interpolated_model_list)
     
-    ## CREATE WEIGHT MATCHING
-    # matching_weights_interpolation(model_A, model_B, 10)
+
     
 
     ## CREATE ACTIVATION MATCHING
-    activation_matching_interpolation(model_A, model_B, 10, dataset)
+    activation_matching_model = activation_matching_interpolation(model_A, model_B, 10, dataset)
 
+    activation_interpolated_model_list = naive_interpolation(model_A, activation_matching_model, 7)
+    create_naive_plot(activation_interpolated_model_list)
     
 
-    ## CREATE NAIVE PLOT
-    #naively_interpolated_model_list = naive_interpolation(model_A, model_B, 7)
-    #create_naive_plot(naively_interpolated_model_list)
+    ## CREATE WEIGHT MATCHING
+    # matching_weights_interpolation(model_A, model_B, 10)
 
 
     # print(model_A.layers[1].weight)
