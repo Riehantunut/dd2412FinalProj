@@ -34,6 +34,10 @@ class MLP(nn.Module):
     '''Forward pass'''
     return self.layers(x)
   
+  # 0. Reshape Z
+  # 1. CHeck the identity of P 
+  # 2. Debug on 2 level network
+
 
 # Returns list of models. First list is model A, last is model B, with interpolated models in between.
 def naive_interpolation(model_A, model_B, num_steps):
@@ -64,7 +68,7 @@ def naive_interpolation(model_A, model_B, num_steps):
 
     return list_of_interpolated_models
 
-def create_naive_plot(naive_list):
+def create_naive_plot(naive_list, need_dtype_change):
     torch.manual_seed(42)
     # Prepare CIFAR-10 dataset
     dataset = CIFAR10(os.getcwd(), download=True, transform=transforms.ToTensor())
@@ -75,7 +79,10 @@ def create_naive_plot(naive_list):
     for naive_model in naive_list:
         for data in trainloader: # This loop should only go once, I know this is non-ideal
             inputs, targets = data
-            outputs = naive_model(inputs)
+            if need_dtype_change:
+                outputs = naive_model(inputs.double()) # convert to double when activation matching to solve dtype error
+            else:
+                outputs = naive_model(inputs)
         
             # Compute loss
             loss = loss_function(outputs, targets)
@@ -109,7 +116,7 @@ def get_Z_for_each_layer(model, dataset):
     # Loop to go through linear layers, and register Z for each layer
     for layer_num in range(1,10, 2):
         model.layers[layer_num].register_forward_hook(get_activation(str(layer_num))) # "1" signifies the first layer
-        output = model(inputs)
+        # output = model(inputs)
         # print(activation[str(layer_num)])
         # print(activation[str(layer_num)].shape)
     
@@ -123,6 +130,8 @@ def activation_matching_interpolation(model_A, model_B, num_steps, dataset):
     Z_dict_model_A = get_Z_for_each_layer(model_A, dataset)
     Z_dict_model_B = get_Z_for_each_layer(model_B, dataset)
 
+    print(Z_dict_model_A["1"])
+
     P_l_for_all_layers = {}
 
     # P_l has dimensions d*d, "d" is the dimension of the layer
@@ -130,12 +139,19 @@ def activation_matching_interpolation(model_A, model_B, num_steps, dataset):
     for layer_num in range(1,10, 2):
         # Use Hungarian method to get P_l
         Z_l = np.matmul(Z_dict_model_A[str(layer_num)], torch.t(Z_dict_model_B[str(layer_num)]))
+
+        print("SHAPE: ", Z_dict_model_A[str(layer_num)].shape) # MAKE SURE THIS IS d*N (d=input_dim*output_dim)
+
+        # MANUALLY VERIFY THAT ROWS ARE SHUFFLED TO PERMUTE TOWARDS MODEL B
         row_ind, col_ind = scipy.optimize.linear_sum_assignment(torch.t(Z_l), maximize = True) # linear_sum_assignment calculates an X matrix with either 0 or 1
 
+        # MATTEO THINKS ^ MIGHT BE WRONG, DOUBLE CHECK THAT THE NEW THING IS CLOSE. TEST ON 2 LAYER NETWORK.
         P_l = np.zeros([len(row_ind), len(row_ind)]) # d*d matrix
         for row in row_ind:
             P_l[row, col_ind[row]] = 1
         P_l = P_l.T # transpose P_l back
+
+        print("IDENTITY PLZ:", np.matmul(P_l, P_l.T))
         P_l_for_all_layers[layer_num] = torch.from_numpy(P_l) # convert np matrix to torch matrix
 
 
@@ -170,7 +186,7 @@ def activation_matching_interpolation(model_A, model_B, num_steps, dataset):
 
 
     # Create new model is the same basin as model_A
-    return interpolated_model.double()
+    return interpolated_model
 
 
 # Based on the algorithm described in the paper
@@ -216,16 +232,16 @@ if __name__ == "__main__":
 
     ## CREATE NAIVE PLOT
     # naively_interpolated_model_list = naive_interpolation(model_A, model_B, 7)
-    # create_naive_plot(naively_interpolated_model_list)
+    # create_naive_plot(naively_interpolated_model_list, False)
     
-
+    # print(dataset) # Number of datapoints: 50000
     
 
     ## CREATE ACTIVATION MATCHING
     activation_matching_model = activation_matching_interpolation(model_A, model_B, 10, dataset)
 
     activation_interpolated_model_list = naive_interpolation(model_A, activation_matching_model, 7)
-    create_naive_plot(activation_interpolated_model_list)
+    create_naive_plot(activation_interpolated_model_list, True)
     
 
     ## CREATE WEIGHT MATCHING
