@@ -116,7 +116,7 @@ def get_Z_for_each_layer(model, dataset):
     # Loop to go through linear layers, and register Z for each layer
     for layer_num in range(1,10, 2):
         model.layers[layer_num].register_forward_hook(get_activation(str(layer_num))) # "1" signifies the first layer
-        # output = model(inputs)
+        output = model(inputs)
         # print(activation[str(layer_num)])
         # print(activation[str(layer_num)].shape)
     
@@ -151,7 +151,7 @@ def activation_matching_interpolation(model_A, model_B, num_steps, dataset):
             P_l[row, col_ind[row]] = 1
         P_l = P_l.T # transpose P_l back
 
-        print("IDENTITY PLZ:", np.matmul(P_l, P_l.T))
+        # print("IDENTITY PLZ:", np.matmul(P_l, P_l.T)) # You get the identity matrix
         P_l_for_all_layers[layer_num] = torch.from_numpy(P_l) # convert np matrix to torch matrix
 
 
