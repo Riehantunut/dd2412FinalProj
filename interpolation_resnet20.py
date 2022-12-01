@@ -107,11 +107,12 @@ def permutation_coordinate_descent(model_weights_A, model_weights_B, layer_list)
 
         # IF WE ARE AT THE LAST LAYER, WE CANNOT GET next_layer
         if layer == layer_list[-1]:
-            print('Last layer:', layer, model_weights_A[layer].shape)
+            print('Last layer:', layer, '\nShape of weights for model A:',
+                  model_weights_A[layer].shape)
         else:
             next_layer = layer_list[i+1]
-            print(layer, model_weights_A[layer].shape,
-                  model_weights_B[next_layer].shape)
+            print('Layer:', layer, '\nShape of weights for model A for current layer:', model_weights_A[layer].shape, '\nShape of weights for model B for the next layer:',
+                  model_weights_B[next_layer].shape, '\n')
 
 
 def matching_weights_interpolation(model_A, model_B):
