@@ -39,6 +39,7 @@ def naive_interpolation(model_A, model_B, num_steps):
             model_B_w = model_B
             interpolated_w = interpolated_model
             for arg in w:
+                # print("arg: ", arg)
                 model_A_w = model_A_w._modules[arg]
                 model_B_w = model_B_w._modules[arg]
                 interpolated_w = interpolated_w._modules[arg]
@@ -133,17 +134,69 @@ def matching_weights_interpolation(model_A, model_B):
     return permutation_coordinate_descent(weights_model_A, weights_model_B, layer_list)
 
 
+
+
+# Registers activations and returns for all layers in model as a dictionary of Z matrices
+def get_Z_for_each_layer(model, dataset):
+    
+    trainloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=1)
+
+    # Get data of batch size
+    for data in trainloader: 
+        inputs, _ = data
+        break
+
+    activation_dict = {}
+    layer_list = []
+    def hook(module, input, output):
+        setattr(module, "_value_hook", output)
+
+    for n, m in model.named_modules():
+        if isinstance(m, torch.nn.Conv2d):
+            m.register_forward_hook(hook)
+
+    model(inputs)
+
+    for n, m in model.named_modules():
+        if isinstance(m, torch.nn.Conv2d):
+            in_output = m._value_hook
+            activation_dict[n] = in_output
+            layer_list.append(n)
+            # print(n, in_output.shape)
+    
+    return activation_dict, layer_list
+
+
+
+def activation_matching_interpolation(model_A, model_B, num_steps, dataset):
+    Z_dict_model_A, layer_list = get_Z_for_each_layer(model_A, dataset)
+    Z_dict_model_B, layer_list = get_Z_for_each_layer(model_B, dataset)
+
+    P_l_for_all_layers = {}
+
+        
+
+
+
 if __name__ == "__main__":
     model_A = ResNet(ResidualBlock, [3, 3, 3])
     model_A.load_state_dict(torch.load("resnet20_model.pth"))
     model_B = ResNet(ResidualBlock, [3, 3, 3])
     model_B.load_state_dict(torch.load("resnet20_model_second.pth"))
 
+    dataset = CIFAR10(os.getcwd(), download=False, transform=transforms.ToTensor())
+
     # CREATE NAIVE PLOT
-    #interpolated_model_list = naive_interpolation(model_A, model_B, 7)
+    interpolated_model_list = naive_interpolation(model_A, model_B, 7)
     # create_naive_plot(interpolated_model_list)
 
+    # MATCHING ACTIVATIONS
+
     # CREATE WEIGHT MATCHING
-    pi_B = matching_weights_interpolation(model_A, model_B)
+    Z_dict_model_A =  get_Z_for_each_layer(model_A, dataset)
+    print(Z_dict_model_A)
+
+
+    # pi_B = matching_weights_interpolation(model_A, model_B)
     #weights_interpolation_model_list = naive_interpolation(model_A, pi_B, 7)
     # create_naive_plot(weights_interpolation_model_list)
