@@ -32,7 +32,6 @@ def naive_interpolation(model_A, model_B, num_steps):
 
         # instantiate empty model
         interpolated_model = ResNet(ResidualBlock, [3, 3, 3])
-
         # In order to access data / change data of ResNet we to acces each "_module"
         # Example: weight_of_specific_layer = model_A_w._modules['layer1']._modules['0']._modules['conv1'].weight.data
         for w in weights:
