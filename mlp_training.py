@@ -18,8 +18,8 @@ class MLP(nn.Module):
       nn.ReLU(),
       nn.Linear(512, 512),
       nn.ReLU(),
-      nn.Linear(512, 512),
-      nn.ReLU(),
+      # nn.Linear(512, 512),
+      # nn.ReLU(),
       nn.Linear(512, 32),
       nn.ReLU(),
       nn.Linear(32, 10)
@@ -34,7 +34,7 @@ class MLP(nn.Module):
 if __name__ == '__main__':
   
   # Set fixed random number seed
-  torch.manual_seed(57557)
+  torch.manual_seed(586)
   
   # Prepare CIFAR-10 dataset
   dataset = CIFAR10(os.getcwd(), download=True, transform=transforms.ToTensor())
@@ -89,4 +89,4 @@ if __name__ == '__main__':
   # Process is complete.
   print('Training process has finished.')
 
-  torch.save(mlp, "mlp_model_second.pth")
+  torch.save(mlp, "mlp_4layer_model_second.pth")
