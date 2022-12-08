@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from scipy import optimize
 import scipy
 import numpy as np
-import ipdb
 
 torch.set_printoptions(precision=8)
 
