@@ -1,7 +1,7 @@
 import os
 import torch
 from torch import nn
-from torchvision.datasets import CIFAR10
+from torchvision.datasets import MNIST
 from torchvision import transforms
 import matplotlib.pyplot as plt
 from scipy import optimize
@@ -23,7 +23,7 @@ class MLP(nn.Module):
         super().__init__()
         self.layers = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(32 * 32 * 3, 512),
+            nn.Linear(784, 512),
             nn.ReLU(),
             nn.Linear(512, 512),
             nn.ReLU(),
@@ -81,9 +81,9 @@ def naive_interpolation(model_A, model_B, num_steps):
 
 def create_naive_plot(naive_list, need_dtype_change):
     torch.manual_seed(42)
-    # Prepare CIFAR-10 dataset
-    dataset = CIFAR10(os.getcwd(), download=True,
-                      transform=transforms.ToTensor())
+    # Prepare MNIST dataset
+    dataset = MNIST(os.getcwd(), download=True,
+                    transform=transforms.ToTensor())
     trainloader = torch.utils.data.DataLoader(
         dataset, batch_size=9000, shuffle=False, num_workers=1)  # Take whole dataset in one batch
 
@@ -353,13 +353,13 @@ def matching_weights_interpolation(model_A, model_B):
 
 
 if __name__ == "__main__":
-    print("INTERPOLATING: MLPs TRAINED ON CIFAR10 WITH ADAM")
+    print("INTERPOLATING: MLPs TRAINED ON MNIST WITH ADAM")
 
-    model_A = torch.load("models/mlp_cifar10_adam_model_1.pth")
-    model_B = torch.load("models/mlp_cifar10_adam_model_2.pth")
+    model_A = torch.load("models/mlp_mnist_adam_model_1.pth")
+    model_B = torch.load("models/mlp_mnist_adam_model_2.pth")
 
-    dataset = CIFAR10(os.getcwd(), download=True,
-                      transform=transforms.ToTensor())
+    dataset = MNIST(os.getcwd(), download=True,
+                    transform=transforms.ToTensor())
 
     # CREATE NAIVE PLOT
     print("NAIVE INTERPOLATION")
@@ -387,14 +387,11 @@ if __name__ == "__main__":
         weights_interpolation_model_list, False)
 
     # # Precomputed
-    # naive_loss_list = [1.4490807056427002, 1.718601942062378, 2.0679800510406494, 2.2422139644622803,
-    #                    2.24509859085083, 2.0832674503326416, 1.7253063917160034, 1.4003878831863403]
+    # naive_loss_list =
 
-    # activation_matching_loss_list = [1.4490806143376926, 1.4936081692014134, 1.5603681291632718,
-    #                                  1.6062007239226954, 1.6065557178970729, 1.556977874815001, 1.4732078003662796, 1.4003879647596076]
+    # activation_matching_loss_list =
 
-    # weight_matching_loss_list = [1.449080467224121, 1.4898062944412231, 1.5503379106521606,
-    #                              1.5948396921157837, 1.5990270376205444, 1.5525918006896973, 1.469681739807129, 1.4003878831863403]
+    # weight_matching_loss_list =
 
     # Save plot
     plt.plot(naive_loss_list, label="naive")
@@ -404,5 +401,5 @@ if __name__ == "__main__":
     plt.ylabel("loss")
     plt.xlabel("steps")
     plt.title(
-        "Interpolation between MLPs trained on CIFAR10 with the Adam optimizer")
-    plt.savefig("plots/interpolation_mlp_cifar10_adam.pdf")
+        "Interpolation between MLPs trained on MNIST with the Adam optimizer")
+    plt.savefig("plots/interpolation_mlp_MNIST_adam.pdf")

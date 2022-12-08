@@ -353,16 +353,15 @@ def matching_weights_interpolation(model_A, model_B):
 
 
 if __name__ == "__main__":
-    print("INTERPOLATING: MLPs TRAINED ON CIFAR10 WITH ADAM")
+    print("INTERPOLATING: MLPs TRAINED ON CIFAR10 WITH SGD")
 
-    model_A = torch.load("models/mlp_cifar10_adam_model_1.pth")
-    model_B = torch.load("models/mlp_cifar10_adam_model_2.pth")
+    model_A = torch.load("models/mlp_cifar10_sgd_model_1.pth")
+    model_B = torch.load("models/mlp_cifar10_sgd_model_2.pth")
 
     dataset = CIFAR10(os.getcwd(), download=True,
                       transform=transforms.ToTensor())
 
     # CREATE NAIVE PLOT
-    print("NAIVE INTERPOLATION")
     naively_interpolated_model_list = naive_interpolation(model_A, model_B, 7)
     naive_loss_list = create_naive_plot(naively_interpolated_model_list, False)
 
@@ -387,14 +386,14 @@ if __name__ == "__main__":
         weights_interpolation_model_list, False)
 
     # # Precomputed
-    # naive_loss_list = [1.4490807056427002, 1.718601942062378, 2.0679800510406494, 2.2422139644622803,
-    #                    2.24509859085083, 2.0832674503326416, 1.7253063917160034, 1.4003878831863403]
+    # naive_loss_list = [1.4601871967315674, 1.7073986530303955, 2.0552759170532227, 2.2602312564849854,
+    #                    2.249587297439575, 2.0224366188049316, 1.6676537990570068, 1.4416595697402954]
 
-    # activation_matching_loss_list = [1.4490806143376926, 1.4936081692014134, 1.5603681291632718,
-    #                                  1.6062007239226954, 1.6065557178970729, 1.556977874815001, 1.4732078003662796, 1.4003879647596076]
+    # activation_matching_loss_list = [1.4601872281898782, 1.494885070676544, 1.5396511581858605,
+    #                                  1.5683436738064223, 1.5669356191440658, 1.5351907585642202, 1.4849597780490553, 1.4416596162275328]
 
-    # weight_matching_loss_list = [1.449080467224121, 1.4898062944412231, 1.5503379106521606,
-    #                              1.5948396921157837, 1.5990270376205444, 1.5525918006896973, 1.469681739807129, 1.4003878831863403]
+    # weight_matching_loss_list = [1.4601871967315674, 1.5260064601898193, 1.6341931819915771,
+    #                              1.7090321779251099, 1.702544927597046, 1.6170518398284912, 1.5041223764419556, 1.4416595697402954]
 
     # Save plot
     plt.plot(naive_loss_list, label="naive")
@@ -404,5 +403,5 @@ if __name__ == "__main__":
     plt.ylabel("loss")
     plt.xlabel("steps")
     plt.title(
-        "Interpolation between MLPs trained on CIFAR10 with the Adam optimizer")
-    plt.savefig("plots/interpolation_mlp_cifar10_adam.pdf")
+        "Interpolation between MLPs trained on CIFAR10 with the SGD optimizer")
+    plt.savefig("plots/interpolation_mlp_cifar10_sgd.pdf")
