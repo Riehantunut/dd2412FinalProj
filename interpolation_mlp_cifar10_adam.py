@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from scipy import optimize
 import scipy
 import numpy as np
+import json
 
 torch.set_printoptions(precision=8)
 
@@ -355,14 +356,17 @@ if __name__ == "__main__":
     print("INTERPOLATING: MLPs TRAINED ON CIFAR10 WITH ADAM")
 
     model_A = torch.load("models/mlp_cifar10_adam_model_1.pth")
-    model_B = torch.load("models/mlp_cifar10_adam_model_2.pth")
+    model_B = torch.load("models/mlp_cifar10_adam_model_4.pth")
 
     dataset = CIFAR10(os.getcwd(), download=True,
                       transform=transforms.ToTensor())
 
+    interpolation_steps = 14
+
     # CREATE NAIVE PLOT
     print("NAIVE INTERPOLATION")
-    naively_interpolated_model_list = naive_interpolation(model_A, model_B, 7)
+    naively_interpolated_model_list = naive_interpolation(
+        model_A, model_B, interpolation_steps)
     naive_loss_list = create_naive_plot(naively_interpolated_model_list, False)
 
     # CREATE ACTIVATION MATCHING
@@ -371,7 +375,7 @@ if __name__ == "__main__":
         model_A, model_B, 10, dataset)
 
     activation_interpolated_model_list = naive_interpolation(
-        model_A, activation_matching_model, 7)
+        model_A, activation_matching_model, interpolation_steps)
     activation_matching_loss_list = create_naive_plot(
         activation_interpolated_model_list, True)
 
@@ -381,27 +385,43 @@ if __name__ == "__main__":
     while sum(converged_list) == 0:
         pi_B, converged_list = matching_weights_interpolation(model_A, model_B)
 
-    weights_interpolation_model_list = naive_interpolation(model_A, pi_B, 7)
+    weights_interpolation_model_list = naive_interpolation(
+        model_A, pi_B, interpolation_steps)
     weight_matching_loss_list = create_naive_plot(
         weights_interpolation_model_list, False)
 
-    # # Precomputed
-    # naive_loss_list = [1.4490807056427002, 1.718601942062378, 2.0679800510406494, 2.2422139644622803,
-    #                    2.24509859085083, 2.0832674503326416, 1.7253063917160034, 1.4003878831863403]
+    steps = list(range(interpolation_steps + 1))
 
-    # activation_matching_loss_list = [1.4490806143376926, 1.4936081692014134, 1.5603681291632718,
-    #                                  1.6062007239226954, 1.6065557178970729, 1.556977874815001, 1.4732078003662796, 1.4003879647596076]
+    absolute_path = os.path.abspath(__file__)
+    data_to_save = {}
+    data_to_save['steps'] = steps
+    data_to_save['naive_loss_list'] = naive_loss_list
+    data_to_save['activation_matching_loss_list'] = activation_matching_loss_list
+    data_to_save['weight_matching_loss_list'] = weight_matching_loss_list
 
-    # weight_matching_loss_list = [1.449080467224121, 1.4898062944412231, 1.5503379106521606,
-    #                              1.5948396921157837, 1.5990270376205444, 1.5525918006896973, 1.469681739807129, 1.4003878831863403]
+    dir_name = os.path.dirname(absolute_path)
+    file_name = dir_name + '/data/mlp_cifar10_adam/run_'
 
-    # Save plot
-    plt.plot(naive_loss_list, label="naive")
-    plt.plot(activation_matching_loss_list, label="activation matching")
-    plt.plot(weight_matching_loss_list, label="weight matching")
-    plt.legend()
-    plt.ylabel("loss")
-    plt.xlabel("steps")
-    plt.title(
-        "Interpolation between MLPs trained on CIFAR10 with the Adam optimizer")
-    plt.savefig("plots/interpolation_mlp_cifar10_adam.pdf")
+    go = True
+    i = 0
+    while go:
+        try:
+            f = open(file_name + str(i) + '.json')
+            f.close()
+            i += 1
+
+        except IOError:
+            with open(file_name + str(i) + '.json', 'w') as outfile:
+                json.dump(data_to_save, outfile)
+            go = False
+
+    # # Save plot
+    # plt.plot(naive_loss_list, label="naive")
+    # plt.plot(activation_matching_loss_list, label="activation matching")
+    # plt.plot(weight_matching_loss_list, label="weight matching")
+    # plt.legend()
+    # plt.ylabel("loss")
+    # plt.xlabel("steps")
+    # plt.title(
+    #     "Interpolation between MLPs trained on CIFAR10 with the Adam optimizer")
+    # plt.savefig("plots/interpolation_mlp_cifar10_adam_14_steps.pdf")

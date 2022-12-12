@@ -35,7 +35,7 @@ class MLP(nn.Module):
 if __name__ == '__main__':
 
     # Set fixed random number seed
-    torch.manual_seed(133331)
+    torch.manual_seed(12211133)
 
     # Prepare CIFAR10
     dataset = CIFAR10(os.getcwd(), download=True,
@@ -91,4 +91,4 @@ if __name__ == '__main__':
     # Process is complete.
     print('Training process has finished.')
 
-    torch.save(mlp, "mlp_cifar10_sgd_model_2.pth")
+    torch.save(mlp, "models/mlp_cifar10_sgd_model_3.pth")

@@ -34,7 +34,7 @@ class MLP(nn.Module):
 if __name__ == '__main__':
 
     # Set fixed random number seed
-    torch.manual_seed(123123)
+    torch.manual_seed(26)
 
     # Prepare MNIST dataset
     dataset = MNIST(os.getcwd(), download=True,
@@ -89,4 +89,4 @@ if __name__ == '__main__':
     # Process is complete.
     print('Training process has finished.')
 
-    torch.save(mlp, "mnist_mlp_model.pth")
+    torch.save(mlp, "models/mlp_mnist_adam_model_4.pth")

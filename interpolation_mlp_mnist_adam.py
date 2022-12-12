@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from scipy import optimize
 import scipy
 import numpy as np
+import json
 
 torch.set_printoptions(precision=8)
 
@@ -355,14 +356,17 @@ if __name__ == "__main__":
     print("INTERPOLATING: MLPs TRAINED ON MNIST WITH ADAM")
 
     model_A = torch.load("models/mlp_mnist_adam_model_1.pth")
-    model_B = torch.load("models/mlp_mnist_adam_model_2.pth")
+    model_B = torch.load("models/mlp_mnist_adam_model_4.pth")
 
     dataset = MNIST(os.getcwd(), download=True,
                     transform=transforms.ToTensor())
 
+    interpolation_steps = 14
+
     # CREATE NAIVE PLOT
     print("NAIVE INTERPOLATION")
-    naively_interpolated_model_list = naive_interpolation(model_A, model_B, 7)
+    naively_interpolated_model_list = naive_interpolation(
+        model_A, model_B, interpolation_steps)
     naive_loss_list = create_naive_plot(naively_interpolated_model_list, False)
 
     # CREATE ACTIVATION MATCHING
@@ -371,7 +375,7 @@ if __name__ == "__main__":
         model_A, model_B, 10, dataset)
 
     activation_interpolated_model_list = naive_interpolation(
-        model_A, activation_matching_model, 7)
+        model_A, activation_matching_model, interpolation_steps)
     activation_matching_loss_list = create_naive_plot(
         activation_interpolated_model_list, True)
 
@@ -381,9 +385,35 @@ if __name__ == "__main__":
     while sum(converged_list) == 0:
         pi_B, converged_list = matching_weights_interpolation(model_A, model_B)
 
-    weights_interpolation_model_list = naive_interpolation(model_A, pi_B, 7)
+    weights_interpolation_model_list = naive_interpolation(
+        model_A, pi_B, interpolation_steps)
     weight_matching_loss_list = create_naive_plot(
         weights_interpolation_model_list, False)
+
+    steps = list(range(interpolation_steps + 1))
+
+    absolute_path = os.path.abspath(__file__)
+    data_to_save = {}
+    data_to_save['steps'] = steps
+    data_to_save['naive_loss_list'] = naive_loss_list
+    data_to_save['activation_matching_loss_list'] = activation_matching_loss_list
+    data_to_save['weight_matching_loss_list'] = weight_matching_loss_list
+
+    dir_name = os.path.dirname(absolute_path)
+    file_name = dir_name + '/data/mlp_mnist_adam/run_'
+
+    go = True
+    i = 0
+    while go:
+        try:
+            f = open(file_name + str(i) + '.json')
+            f.close()
+            i += 1
+
+        except IOError:
+            with open(file_name + str(i) + '.json', 'w') as outfile:
+                json.dump(data_to_save, outfile)
+            go = False
 
     # # Precomputed
     # naive_loss_list =
@@ -392,13 +422,13 @@ if __name__ == "__main__":
 
     # weight_matching_loss_list =
 
-    # Save plot
-    plt.plot(naive_loss_list, label="naive")
-    plt.plot(activation_matching_loss_list, label="activation matching")
-    plt.plot(weight_matching_loss_list, label="weight matching")
-    plt.legend()
-    plt.ylabel("loss")
-    plt.xlabel("steps")
-    plt.title(
-        "Interpolation between MLPs trained on MNIST with the Adam optimizer")
-    plt.savefig("plots/interpolation_mlp_MNIST_adam.pdf")
+    # # Save plot
+    # plt.plot(naive_loss_list, label="naive")
+    # plt.plot(activation_matching_loss_list, label="activation matching")
+    # plt.plot(weight_matching_loss_list, label="weight matching")
+    # plt.legend()
+    # plt.ylabel("loss")
+    # plt.xlabel("steps")
+    # plt.title(
+    #     "Interpolation between MLPs trained on MNIST with the Adam optimizer")
+    # plt.savefig("plots/interpolation_mlp_MNIST_adam.pdf")
