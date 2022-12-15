@@ -19,7 +19,11 @@ class MLP(nn.Module):
             nn.ReLU(),
             nn.Linear(512, 512),
             nn.ReLU(),
-            nn.Linear(512, 512),
+            nn.Linear(512, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
             nn.ReLU(),
             nn.Linear(512, 32),
             nn.ReLU(),
@@ -34,7 +38,7 @@ class MLP(nn.Module):
 if __name__ == '__main__':
 
     # Set fixed random number seed
-    torch.manual_seed(161)
+    torch.manual_seed(1001001)
 
     # Prepare CIFAR-10 dataset
     dataset = CIFAR10(os.getcwd(), download=True,
@@ -52,7 +56,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(mlp.parameters(), lr=1e-4)
 
     # Run the training loop
-    for epoch in range(0, 5):  # 5 epochs at maximum
+    for epoch in range(0, 10):  # 5 epochs at maximum
 
         # Print epoch
         print(f'Starting epoch {epoch+1}')
@@ -91,4 +95,4 @@ if __name__ == '__main__':
     # Process is complete.
     print('Training process has finished.')
 
-    torch.save(mlp, "models/mlp_cifar10_adam_model_5.pth")
+    torch.save(mlp, "models/big_mlp_cifar10_adam_model_2.pth")
