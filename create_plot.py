@@ -15,12 +15,10 @@ absolute_path = os.path.abspath(__file__)
 data = []
 
 
+# Repo of data to plot
 file_name = os.path.dirname(absolute_path) + \
-    '/data/mlp_cifar10_adam/run_'
-# file_name = os.path.dirname(absolute_path) + \
-#     '/data/mlp_mnist_adam/run_'
-# file_name = os.path.dirname(absolute_path) + \
-#     '/data/big_sgd/run_'
+    '/data/mlp_mnist_adam/run_'
+
 go = True
 i = 0
 
@@ -84,12 +82,10 @@ plt.xlabel(r'Interpolation step')
 plt.ylabel(r'Loss')
 plt.tight_layout()
 plt.xlim(0, 14)
-plt.ylim(1.4, 2.4)
+plt.ylim(0., 2.5)
 
+# Save plot
 plt.savefig(os.path.dirname(absolute_path) +
-            '/plots/mlp_cifar10_adam.pdf', format='pdf')
-# plt.savefig(os.path.dirname(absolute_path) +
-#             '/plots/mlp_mnist_adam.pdf', format='pdf')
-# plt.savefig(os.path.dirname(absolute_path) +
-#             '/plots/big_sgd.pdf', format='pdf')
+            '/plots/mlp_mnist_adam.pdf', format='pdf')
+
 plt.show()

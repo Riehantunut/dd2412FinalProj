@@ -75,12 +75,7 @@ plt.ylabel(r'Loss')
 plt.tight_layout()
 plt.xlim(0, 14)
 plt.ylim(0, 1.8)
-# plt.savefig(os.path.dirname(absolute_path) +
-#             '/plots/mlp_cifar10_adam.pdf', format='pdf')
-# plt.savefig(os.path.dirname(absolute_path) +
-#             '/plots/mlp_cifar10_sgd.pdf', format='pdf')
-# plt.savefig(os.path.dirname(absolute_path) +
-#             '/plots/mlp_mnist_adam.pdf', format='pdf')
+
 plt.savefig(os.path.dirname(absolute_path) +
             '/plots/original_mlp_adam.pdf', format='pdf')
 plt.show()
